@@ -1,0 +1,45 @@
+{
+ "_doc": "sfx waves that are voices (dirty-room finding): words heard, length, median pitch. Words set by us where the recogniser only guessed (grunts/screams).",
+ "4864": {
+  "text": "Aaah!",
+  "dur": 0.87,
+  "f0": 380,
+  "who": "male2",
+  "no_speech": 0.55
+ },
+ "4952": {
+  "text": "Ugh!",
+  "dur": 0.54,
+  "f0": 394,
+  "who": "male",
+  "no_speech": 0.49
+ },
+ "5072": {
+  "text": "Ahhh!",
+  "dur": 0.55,
+  "f0": 416,
+  "who": "male2",
+  "no_speech": 0.59
+ },
+ "5208": {
+  "text": "Oof!",
+  "dur": 0.54,
+  "f0": 131,
+  "who": "male",
+  "no_speech": 0.59
+ },
+ "5616": {
+  "text": "No!",
+  "dur": 0.55,
+  "f0": 459,
+  "who": "male2",
+  "no_speech": 0.53
+ },
+ "15600": {
+  "text": "Hah!",
+  "dur": 0.44,
+  "f0": 235,
+  "who": "male",
+  "no_speech": 0.52
+ }
+}

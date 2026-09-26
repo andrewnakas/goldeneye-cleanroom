@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include "puff.h"
 extern unsigned long puff_incnt;
+#define BE16(v) ((uint16_t)((((v) & 0xff) << 8) | (((v) >> 8) & 0xff))) /* GE indices are big-endian */
 #include "pdtex.h"
 
 /**
@@ -234,7 +235,7 @@ static void texInflateRle(uint8_t *dst, int blockstotal)
 				blocksdone++;
 			} else {
 				uint16_t *tmp = (uint16_t *)dst;
-				tmp[blocksdone] = texReadBits(blocksize);
+				tmp[blocksdone] = BE16(texReadBits(blocksize));
 				blocksdone++;
 			}
 		} else {
@@ -260,7 +261,7 @@ static void texInflateRle(uint8_t *dst, int blockstotal)
 				}
 
 				// The next instruction must be a literal
-				tmp[blocksdone] = texReadBits(blocksize);
+				tmp[blocksdone] = BE16(texReadBits(blocksize));
 				blocksdone++;
 			}
 		}
@@ -419,7 +420,7 @@ static void texChannelsToPixels(uint8_t *src, int width, int height, uint8_t *ds
 				pos--;
 			}
 
-			dst += width;
+			dst += (width + 1) >> 1; /* packed rows, odd widths too */
 		}
 
 		break;
@@ -510,7 +511,7 @@ static void texInflateLookup(int width, int height, uint8_t *dst, uint8_t *looku
 				}
 			}
 
-			dst += width >> 1;
+			dst += (width + 1) >> 1;
 		}
 
 		break;
@@ -603,10 +604,10 @@ static void texInflateLookupFromBuffer(uint8_t *src, int width, int height, uint
 	case PDFORMAT_I4:
 		for (y = 0; y < height; y++) {
 			for (x = 0; x < width; x += 2) {
-				dst[x >> 1] = lookup[indexes[x] * 2 + 1] << 4 | lookup[indexes[x + 1] * 2 + 1];
+				dst[x >> 1] = lookup[indexes[x] * 2 + 1] << 4 | (x + 1 < width ? lookup[indexes[x + 1] * 2 + 1] : 0);
 			}
 
-			dst += width >> 1;
+			dst += (width + 1) >> 1;
 			indexes += width;
 		}
 
