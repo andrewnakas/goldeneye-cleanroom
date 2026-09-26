@@ -164,8 +164,10 @@ _ROLES = None
 def default_override(t, k=None, tree=None):
     """Our drawn/typeset pictures for textures that need more than a colour grid."""
     global _ROLES
-    from games.goldeneye import faces, labels, pictures
-    img = pictures.override(t, None)
+    from games.goldeneye import faces, labels, level_render, pictures
+    img = level_render.override(t, tree) if tree is not None else None
+    if img is None:
+        img = pictures.override(t, None)
     if img is None and k is not None:
         img = labels.override(t, k)
     if img is None and k is not None and tree is not None:
