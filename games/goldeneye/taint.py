@@ -5,7 +5,8 @@
 Scanned (clean vs retail, in the same representation):
   image bank: decoded native pixels of every level, and the compressed files
   sound banks: .tbl bytes and decoded PCM
-  fonts (glyph bytes), Rare logo pixels, gun-barrel picture (compressed and expanded)
+  fonts (glyph bytes), Rare logo pixels, gun-barrel picture (compressed and expanded),
+  textures embedded in prop models (legal page, GoldenEye/Nintendo logos)
 Kept facts (geometry, setups, text, note sequences, demo inputs, bank structure) are not scanned.
 """
 import os
@@ -50,6 +51,8 @@ def src_streams(tree):
     for f in ("assets/font_chardataj.c", "assets/font_chardatae.c"):
         a = parse_u32_arrays(open(os.path.join(tree, f)).read())
         yield f, b"".join(np.asarray(v, ">u4").tobytes() for v in a.values())
+    from games.goldeneye import embedded
+    yield from embedded.streams(tree)
     b = open(os.path.join(tree, "assets/ge007.u.2A4D50.usedby7F008DE4.bin"), "rb").read()
     yield "gunbarrel.rle", b
     out, p = bytearray(), 10

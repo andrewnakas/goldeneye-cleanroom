@@ -41,7 +41,41 @@ window.cleanroomKeys = function (spec) {
     }, 1000 * parseFloat(t));
   });
 };
+
+// Browsers start an AudioContext suspended unless a user gesture created it; the ROM auto-loads
+// without one, so resume audio on the first click / key / touch (gamepad presses don't count).
+(function () {
+  function wake() {
+    try {
+      if (typeof myClass !== 'undefined' && myClass.audioContext && myClass.audioContext.state !== 'running') {
+        myClass.audioContext.resume();
+      }
+    } catch (e) {}
+    try {
+      const ok = myClass && myClass.audioContext && myClass.audioContext.state === 'running';
+      const hint = document.getElementById('soundHint');
+      if (hint && ok) hint.style.display = 'none';
+    } catch (e) {}
+  }
+  ['pointerdown', 'mousedown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, wake, true));
+  setInterval(wake, 1000);
+})();
+
+// dev hook: ?audiolog=1 prints the RMS of the emulator's audio ring buffer every 2 s
+if (new URLSearchParams(location.search).get('audiolog')) {
+  setInterval(() => {
+    try {
+      const b = myClass.audioBufferResampled; let s = 0;
+      for (let i = 0; i < b.length; i++) s += b[i] * b[i];
+      console.log('audiolog rms=' + Math.sqrt(s / b.length).toFixed(1) + ' state=' + myClass.audioContext.state);
+    } catch (e) { console.log('audiolog n/a'); }
+  }, 2000);
+}
 """
+
+SOUND_HINT = """<div id="soundHint" style="max-width:720px;margin:8px auto;padding:6px 10px;background:#fff3cd;
+border:1px solid #e0c060;border-radius:6px;font-size:14px">Sound starts after your first click or key press
+on this page (browsers block audio until then).</div>"""
 
 
 INFO = """
@@ -89,7 +123,7 @@ def main():
     html = open(idx, encoding="utf-8").read()
     html = html.replace("<title>N64 Wasm</title>", "<title>GoldenEye 007 clean room</title>")
     html = re.sub(r"<h1>\s*N64 Wasm", '<h1>GoldenEye 007 <small style="font-size:50%">clean room</small>', html, 1)
-    html = html.replace('<div id="bottomPanel"', INFO + '<div id="bottomPanel"', 1)
+    html = html.replace('<div id="bottomPanel"', SOUND_HINT + INFO + '<div id="bottomPanel"', 1)
     # serve the page's libraries ourselves (a slow or blocked CDN left the emulator hidden)
     vend = os.path.join(HERE, "vendor")
     os.makedirs(os.path.join(a.out, "vendor"), exist_ok=True)

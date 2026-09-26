@@ -240,10 +240,14 @@ def main(argv):
         setup(pristine, dirty, clean)
         textures(clean)
         pictures(clean)
-        from games.goldeneye import audio, fonts, srcpics
+        from games.goldeneye import audio, embedded, fonts, srcpics
+        embedded.build(dirty, clean)
         audio.build(dirty, clean)
         fonts.main([pristine, clean])
         srcpics.build(pristine, clean)
+    elif cmd == "embedded":
+        from games.goldeneye import embedded
+        embedded.build(argv[1], argv[2])
     elif cmd == "pictures":
         pictures(argv[1])
 
