@@ -80,6 +80,9 @@ def main():
                       "try { Module.callMain(['custom.v64']); } catch (e) { console.log('callMain threw', e); }", 1)
     src = src.replace("await this.LoadSram();",
                       "try { await this.LoadSram(); } catch (e) { console.log('LoadSram threw', e); }", 1)
+    # IndexedDB can answer before `myClass` exists on a slow page load (TDZ ReferenceError)
+    src = src.replace("myClass.dblist.push(rom);", "try { myClass.dblist.push(rom); } catch (e) {}", 1)
+    src = src.replace("if (myClass.dblist.length > 0) {", "if (false) {", 1)
     open(os.path.join(a.out, "script.js"), "w", encoding="utf-8").write(KEYS_JS + src)
     open(os.path.join(a.out, "romlist.js"), "w").write("var ROMLIST = [];\nwindow.SITE_ROM = 'game.z64';\n")
     idx = a.index if os.path.exists(a.index) else os.path.join(a.n64wasm, "index.html")
@@ -87,6 +90,14 @@ def main():
     html = html.replace("<title>N64 Wasm</title>", "<title>GoldenEye 007 clean room</title>")
     html = re.sub(r"<h1>\s*N64 Wasm", '<h1>GoldenEye 007 <small style="font-size:50%">clean room</small>', html, 1)
     html = html.replace('<div id="bottomPanel"', INFO + '<div id="bottomPanel"', 1)
+    # serve the page's libraries ourselves (a slow or blocked CDN left the emulator hidden)
+    vend = os.path.join(HERE, "vendor")
+    os.makedirs(os.path.join(a.out, "vendor"), exist_ok=True)
+    for m in re.finditer(r'(?:src|href)="(https?://[^"]+\.(?:js|css))"', html):
+        name = m.group(1).rsplit("/", 1)[1]
+        if os.path.exists(os.path.join(vend, name)):
+            shutil.copy(os.path.join(vend, name), os.path.join(a.out, "vendor", name))
+            html = html.replace(m.group(1), "vendor/" + name)
     open(os.path.join(a.out, "index.html"), "w", encoding="utf-8").write(html)
     open(os.path.join(a.out, ".nojekyll"), "w").write("")
     shutil.copy(a.rom, os.path.join(a.out, "game.z64"))
