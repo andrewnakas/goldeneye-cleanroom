@@ -48,6 +48,13 @@ published by `games/goldeneye/publish.sh`, which refuses to publish unless the t
   `overrides/sounds/sfx/`, practice pack at `D:/n64work/goldeneye/practice` (never published).
 
 ## Known issues / next
+- Site hardening (02:10): the page's 9 CDN libraries are vendored (a slow CDN left the emulator hidden) and an
+  IndexedDB/`myClass` startup race is guarded. Live site verified to boot to the legal screen (headless).
+- Question for you: textures whose content is all alpha (legal-screen GOLDENEYE 007 logo, the two signatures,
+  some icons) keep their exact silhouette through the kept 2-bit alpha outline (agreed scope, same as SM64).
+  Say if you want those redrawn/re-typeset instead.
+- Gameplay re-check of the latest builds is pending: this machine was at 60-70% CPU from other sessions and
+  headless N64Wasm ran at 2-6 fps (retail ROM too). An earlier build with the same pipeline played Dam.
 - Level textures are colour grids + noise (default scope); some large signs/posters may still carry text not yet
   transcribed (see find_text ranking beyond the first 120).
 - Mission thumbnails are simple drawn scenes; could be renders of each level's own geometry.
