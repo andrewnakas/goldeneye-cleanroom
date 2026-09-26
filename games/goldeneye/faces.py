@@ -15,6 +15,7 @@ from cleanroom.decomp.gen import detail, h32, upsample_grid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 _HEADS = None
+NOT_FACES = {1873}      # skin-toned body strip (moonfemale suit), checked on the contact sheet
 
 
 def head_roles(tree):
@@ -25,13 +26,15 @@ def head_roles(tree):
     roles = {}
     chr_dir = os.path.join(tree, "assets/obseg/chr")
     for d in sorted(os.listdir(chr_dir)):
-        if not d.startswith("head"):
+        if not os.path.isdir(os.path.join(chr_dir, d)):
             continue
+        head_model = d.startswith("head")
         src = open(os.path.join(chr_dir, d, "Model.c")).read()
         ids = []
         for n in re.findall(r"IMAGE_([A-Za-z0-9_]+)", src):
             k = names.get(n)
-            if k is not None and k not in ids and T[k]["levels"][0][1:] == [32, 64] and "grid" in T[k]:
+            if k is not None and k not in ids and T[k]["levels"][0][1:] == [32, 64] and "grid" in T[k] \
+                    and (head_model or skin_centre(T[k]["grid"])) and k not in NOT_FACES:
                 ids.append(k)
         if not ids:
             continue
@@ -40,6 +43,13 @@ def head_roles(tree):
         for k in ids:
             roles.setdefault(k, "front" if k == front else "side")
     return roles
+
+
+def skin_centre(grid):
+    """Middle cells of a 4x4 grid look like skin (warm, mid-bright)."""
+    g = np.asarray(grid, np.float32).reshape(4, 4, 4)[1:3, 1:3, :3].reshape(-1, 3)
+    r, gg, b = g.mean(0)
+    return bool(r > 90 and r - gg >= 12 and gg >= b - 5 and 25 <= r - b <= 130 and g.std(0).mean() < 40)
 
 
 def symmetry(grid):

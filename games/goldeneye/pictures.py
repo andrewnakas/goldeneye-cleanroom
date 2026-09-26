@@ -26,7 +26,7 @@ _B = None
 def briefs():
     global _B
     if _B is None:
-        _B = json.load(open(BRIEFS))
+        _B = json.load(open(BRIEFS, encoding="utf-8"))
     return _B
 
 
@@ -210,6 +210,72 @@ def paint_crest(w, h):
     return out
 
 
+# ------------------------------------------------------------------ safety signs and badges
+
+K = [20, 20, 20]
+
+
+def _icon(name):
+    """Black pictogram ops in a unit box centred on (0.5, 0.52)."""
+    if name == "cigarette":
+        return [{"rect": [0.22, 0.52, 0.70, 0.60], "c": K}, {"rect": [0.70, 0.52, 0.78, 0.60], "c": [200, 60, 30]},
+                {"line": [[0.74, 0.46], [0.70, 0.38], [0.76, 0.30]], "w": 0.03, "c": K}]
+    if name == "flame":
+        return [{"poly": [[0.5, 0.22], [0.64, 0.45], [0.62, 0.66], [0.5, 0.74], [0.38, 0.66], [0.36, 0.45]], "c": K},
+                {"poly": [[0.5, 0.45], [0.56, 0.58], [0.5, 0.68], [0.44, 0.58]], "c": [255, 255, 255]}]
+    if name in ("person", "gunman"):
+        ops = [{"e": [0.5, 0.26, 0.06, 0.06], "c": K},
+               {"poly": [[0.43, 0.34], [0.57, 0.34], [0.58, 0.58], [0.54, 0.58], [0.55, 0.80], [0.51, 0.80],
+                         [0.5, 0.60], [0.49, 0.80], [0.45, 0.80], [0.46, 0.58], [0.42, 0.58]], "c": K}]
+        if name == "gunman":
+            ops.append({"line": [[0.56, 0.38], [0.70, 0.30], [0.78, 0.30]], "w": 0.035, "c": K})
+        return ops
+    if name == "biohazard":
+        return [{"ring": [0.5 + 0.1 * math.cos(a), 0.55 + 0.1 * math.sin(a), 0.11, 0.11], "w": 0.03, "c": K}
+                for a in (-math.pi / 2, math.pi / 6, 5 * math.pi / 6)] + [{"ring": [0.5, 0.55, 0.06, 0.06], "w": 0.025, "c": K}]
+    if name == "skull":
+        return [{"line": [[0.32, 0.72], [0.68, 0.48]], "w": 0.05, "c": K}, {"line": [[0.32, 0.48], [0.68, 0.72]], "w": 0.05, "c": K},
+                {"e": [0.5, 0.48, 0.12, 0.11], "c": K}, {"rect": [0.44, 0.55, 0.56, 0.63], "c": K},
+                {"e": [0.46, 0.47, 0.03, 0.03], "c": [230, 200, 40]}, {"e": [0.54, 0.47, 0.03, 0.03], "c": [230, 200, 40]}]
+    if name == "flame_ring":
+        return _icon("flame")[:1] + [{"arc": [0.5, 0.74, 0.14, 0.05, 0, 360], "w": 0.04, "c": K}]
+    return []
+
+
+def paint_sign(b, w, h):
+    kind = b["kind"]
+    if kind == "prohibit":
+        ops = [{"ring": [0.5, 0.5, 0.40, 0.40], "w": 0.09, "c": [210, 30, 30]}] + _icon(b["icon"]) + \
+              [{"line": [[0.24, 0.24], [0.76, 0.76]], "w": 0.08, "c": [210, 30, 30]}]
+        base = [245, 245, 240]
+    elif kind == "warn":
+        ops = [{"poly": [[0.5, 0.08], [0.95, 0.88], [0.05, 0.88]], "c": K},
+               {"poly": [[0.5, 0.17], [0.86, 0.83], [0.14, 0.83]], "c": [240, 200, 30]}] + _icon(b["icon"])
+        base = b.get("bg", [245, 245, 240])
+    elif kind == "placard":
+        ops = [{"rect": [0.04, 0.04, 0.96, 0.40], "c": [235, 235, 230]}, {"rect": [0.06, 0.08, 0.30, 0.36], "c": [240, 200, 30]},
+               {"poly": [[0.27, 0.46], [0.48, 0.68], [0.27, 0.92], [0.06, 0.68]], "c": [240, 200, 30]},
+               {"rect": [0.52, 0.44, 0.96, 0.96], "c": [235, 235, 230]}]
+        base = [150, 150, 150]
+    elif kind == "badge":
+        ops = [{"poly": [[0.1, 0.08], [0.9, 0.08], [0.9, 0.62], [0.5, 0.94], [0.1, 0.62]], "c": [200, 160, 50]},
+               {"poly": [[0.16, 0.13], [0.84, 0.13], [0.84, 0.60], [0.5, 0.87], [0.16, 0.60]], "c": [30, 40, 80]},
+               {"rect": [0.2, 0.36, 0.8, 0.44], "c": [245, 245, 245]}, {"rect": [0.2, 0.44, 0.8, 0.52], "c": [40, 70, 190]},
+               {"rect": [0.2, 0.52, 0.8, 0.60], "c": [200, 30, 30]}]
+        base = [150, 120, 60]
+    else:
+        return None
+    img = facepaint.render({"base": base, "ops": ops}, w, h)
+    for txt, box, col in b.get("text", []):
+        x0, y0, x1, y1 = (int(round(v * s)) for v, s in zip(box, (w, h, w, h)))
+        m = strokefont.render_line(txt, max(3, y1 - y0), thickness=max(0.7, (y1 - y0) * 0.1))
+        if m.shape[1] > x1 - x0:
+            m = m[:, np.clip(np.linspace(0, m.shape[1] - 1, x1 - x0).astype(int), 0, m.shape[1] - 1)]
+        xs = x0 + (x1 - x0 - m.shape[1]) // 2
+        img[y0:y0 + m.shape[0], xs:xs + m.shape[1], :3] = img[y0:y0 + m.shape[0], xs:xs + m.shape[1], :3] * (1 - m[..., None]) + np.asarray(col) * m[..., None]
+    return img
+
+
 # ------------------------------------------------------------------ tiling
 
 QUAD = {"UL": (0, 0), "UR": (0, 1), "LL": (1, 0), "LR": (1, 1)}
@@ -266,6 +332,13 @@ def override(t, all_tex):
         return storage(full[:, :w] if m.group(2) == "L" else full[:, w:])
     if name == "MI6":
         return storage(paint_crest(w, h))
+    if name in P.get("signs", {}):
+        img = paint_sign(P["signs"][name], w, h)
+        if img is not None:
+            if "alpha2" in t:          # keep the sign's cut-out silhouette (kept fact)
+                from cleanroom.decomp.gen import unpack_alpha2
+                img[..., 3] = unpack_alpha2(t["alpha2"], w, h)[::-1]
+            return storage(img)
     return None
 
 
