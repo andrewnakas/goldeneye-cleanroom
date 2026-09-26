@@ -48,10 +48,10 @@ published by `games/goldeneye/publish.sh`, which refuses to publish unless the t
   `overrides/sounds/sfx/`, practice pack at `D:/n64work/goldeneye/practice` (never published).
 
 ## Known issues / next
-- **~05:05: the D: drive disconnected** (the 1.9 TB disk is no longer attached; only C: and E: remain). All work was
+- ~05:05: the D: drive disconnected for a few minutes and came back intact (was: (the 1.9 TB disk is no longer attached; only C: and E: remain). All work was
   pushed to GitHub first, and the live site is unaffected. The local work trees (pristine/dirty/clean decomp trees,
   tex2raw.exe, the practice pack at D:/n64work/goldeneye/practice) live on D: and return when it is reconnected.
-  Heavy work (builds, headless checks) is paused until then; C: has ~20 GB free but CLAUDE.md reserves it.
+  Heavy work (builds, headless checks) is paused until then.) Nothing was lost; work continues on D:.
 - Site hardening (02:10): the page's 9 CDN libraries are vendored (a slow CDN left the emulator hidden) and an
   IndexedDB/`myClass` startup race is guarded. Live site verified to boot to the legal screen (headless).
 - Question for you: textures whose content is all alpha (legal-screen GOLDENEYE 007 logo, the two signatures,
