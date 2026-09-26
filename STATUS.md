@@ -33,20 +33,29 @@ published by `games/goldeneye/publish.sh`, which refuses to publish unless the t
 - Taint: `python -m games.goldeneye.taint` -> 0 failing of 7,526 streams (textures compressed + decoded, glyphs,
   logo, gun barrel, tbl + decoded PCM).
 
-## Works (2026-09-26 00:45)
+## Works (2026-09-26 ~02:00)
 - Clean ROM boots: logos, legal screen, file select, mission select, dossier text readable (both fonts);
   Dam mission loads and plays (walking, PP7, ammo HUD) in headless N64Wasm.
+- Menu pictures drawn from our briefs (`picture_briefs.json`, `pictures.py`): Bond/character portraits (generic
+  B&W studio busts: costume + hair only, no likenesses), mission/MP recon thumbnails, CLASSIFIED/CONFIDENTIAL/
+  EYES ONLY/FOR YOUR/OHMSS stamps re-typeset, a service crest. Verified upright in-game (GE stores textures
+  bottom row first; pictures are painted upright, tiled, flipped).
+- In-game heads (96 strips from the head models): kept skin/hair grid + our eyes/brows/nose/mouth (front) or ear (sides).
+- Text inside textures re-typeset (`text_labels.json`, `labels.py`; Cyrillic added to the shared stroke font):
+  Russian signs, ammo-box labels, PERSONNEL, KH-89, 715, monitor captions, Tazer Boy; 7-segment digits drawn.
+- Texture encoder: lookup or Huffman-lookup (ported the game's tree builder; exact round trip), whichever is smaller.
+- Voices: GE has only a handful of vocal sfx (6 found: grunts/screams); Piper placeholders in
+  `overrides/sounds/sfx/`, practice pack at `D:/n64work/goldeneye/practice` (never published).
 
 ## Known issues / next
-- Pictures: Bond photo on the folders, mission-select thumbnails, MI6 crest (MI6_*), monitor screens, posters are
-  colour grids -> draw/render them (c_render of Bond's head model for the photo; level renders for thumbnails).
-- Faces: character head textures (head* models) are grids -> face briefs (facepaint).
-- Text-bearing textures (SELECT FILE / COPY / ERASE icons, ammo box labels, signs, monitor text) -> re-typeset.
-- Legal screen / Nintendo logo check; ':' glyph in ZurichBold looks blank.
-- Voices: GE has almost no speech; guard vocal sfx are resynthesised noise. Practice pack still to build.
-- Headless speed varies a lot with machine load (other sessions); a real browser should be 60 fps on menus.
+- Level textures are colour grids + noise (default scope); some large signs/posters may still carry text not yet
+  transcribed (see find_text ranking beyond the first 120).
+- Mission thumbnails are simple drawn scenes; could be renders of each level's own geometry.
+- HUD/watch menu not yet reviewed in detail; legal screen / Nintendo logo check.
+- Headless speed varies a lot with machine load; a real browser should be 60 fps on menus.
 
 ## For the morning
 1. Open the live link in a desktop browser (keyboard: arrows move, A fire, D use, Enter start; or a gamepad) and play
    Dam. Tell me what looks/sounds worst.
-2. Nothing to record yet (voice practice pack pending).
+2. Voices (optional, 6 short grunts/screams): `D:/n64work/goldeneye/practice/SCRIPT.txt` + call-and-response
+   tracks. Save takes as `games/goldeneye/overrides/sounds/sfx/<slot>.wav` and I'll rebuild.
