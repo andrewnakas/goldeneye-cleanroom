@@ -126,8 +126,13 @@ def level0_image(t):
 
 def encode_texture(t, img0):
     """Encode our level-0 picture with the retail header/levels/formats."""
-    levels = t["levels"]
+    levels = [list(l) for l in t["levels"]]
     hdr = t["header"]
+    if hdr & 0x80 and not hdr & 0x40:
+        # explicit levels: the header's count must match what we emit (header-only facts carry 1)
+        while len(levels) < (hdr & 0x3f):
+            f, w, h = levels[-1]
+            levels.append([f, (w + 1) // 2, (h + 1) // 2])
     imgs = [img0] + [downscale(img0, w, h) for _, w, h in levels[1:]]
     if t.get("palette"):
         fmt = levels[0][0]
@@ -153,6 +158,23 @@ def encode_texture(t, img0):
     return data
 
 
+_ROLES = None
+
+
+def default_override(t, k=None, tree=None):
+    """Our drawn/typeset pictures for textures that need more than a colour grid."""
+    global _ROLES
+    from games.goldeneye import faces, labels, pictures
+    img = pictures.override(t, None)
+    if img is None and k is not None:
+        img = labels.override(t, k)
+    if img is None and k is not None and tree is not None:
+        if _ROLES is None:
+            _ROLES = faces.head_roles(tree)
+        img = faces.override(t, k, _ROLES)
+    return img
+
+
 def textures(clean, only=None, overrides=None):
     T = json.load(open(os.path.join(SPEC, "textures.json")))
     split = os.path.join(clean, "assets/images/split")
@@ -161,7 +183,9 @@ def textures(clean, only=None, overrides=None):
     for k, t in enumerate(T):
         if only and k not in only:
             continue
-        img0 = overrides(t) if overrides else None
+        img0 = overrides(t) if overrides else default_override(t, k, clean)
+        if img0 is not None:
+            img0 = np.clip(np.asarray(img0, np.float32) + 0.5, 0, 255).astype(np.uint8)
         if img0 is None:
             img0 = level0_image(t)
         data = encode_texture(t, img0)

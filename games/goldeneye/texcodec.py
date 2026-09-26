@@ -86,8 +86,9 @@ def level_rgba(lv, palette):
             i = nib * 17
             px = np.stack([i, i, i, np.full(n, 255, np.uint8)], -1)
         else:
+            nib = nib.astype(np.int32)
             i = ((nib >> 1) * 255 // 7).astype(np.uint8)
-            a = (nib & 1) * 255
+            a = ((nib & 1) * 255).astype(np.uint8)
             px = np.stack([i, i, i, a], -1)
     else:
         px = np.zeros((n, 4), np.uint8)
@@ -194,23 +195,126 @@ def encode_lookup(bw, px, fmt):
     bw.put_many(idx, bitsize(len(colours)))
 
 
-def encode_level_nonzlib(bw, px, fmt):
+def huffman_tree(freqs):
+    """Port of texInflateHuffman's tree construction. Returns {symbol: bitstring}."""
+    n = len(freqs)
+    f = list(freqs) + [0] * (2048 - n)
+    nodes = [[-1, -1] for _ in range(2048)]
+    min1 = min2 = 9999
+    i1 = i2 = 0
+    for i in range(n):
+        if f[i] < min1:
+            if min2 < min1:
+                min1, i1 = f[i], i
+            else:
+                min2, i2 = f[i], i
+        elif f[i] < min2:
+            min2, i2 = f[i], i
+    root = 0
+    while True:
+        s = f[i1] + f[i2] or 1
+        f[i1] = f[i2] = 9999
+        leaf = lambda k: nodes[k][0] < 0 and nodes[k][1] < 0
+        if leaf(i1):
+            nodes[i1][0] = i1 + 10000
+            root = i1
+            f[i1] = s
+            nodes[i1][1] = i2 + 10000 if leaf(i2) else i2
+        elif leaf(i2):
+            nodes[i2][0] = i2 + 10000
+            root = i2
+            f[i2] = s
+            nodes[i2][1] = i1 + 10000 if leaf(i1) else i1
+        else:
+            root = 0
+            while nodes[root][0] >= 0 or nodes[root][1] >= 0 or f[root] < 9999:
+                root += 1
+            f[root] = s
+            nodes[root] = [i1, i2]
+        min1 = min2 = 9999
+        for i in range(n):
+            if f[i] < min1:
+                if min1 > min2:
+                    min1, i1 = f[i], i
+                else:
+                    min2, i2 = f[i], i
+            elif f[i] < min2:
+                min2, i2 = f[i], i
+        if min1 == 9999 or min2 == 9999:
+            break
+    codes = {}
+    stack = [(root, "")]
+    while stack:
+        k, pre = stack.pop()
+        for b in (0, 1):
+            v = nodes[k][b]
+            if v >= 10000:
+                codes[v - 10000] = pre + str(b)
+            elif v >= 0:
+                stack.append((v, pre + str(b)))
+    return codes
+
+
+def encode_huffman_lookup(bw, px, fmt):
+    """TEXCOMPMETHOD_HUFFMANLOOKUP (6): lookup table, 8-bit frequencies, Huffman-coded indices."""
+    vals = rgba_to_native(px, fmt)
+    colours, idx = np.unique(vals, return_inverse=True)
+    if len(colours) < 2:
+        colours = np.append(colours, colours[0] ^ 1)
+    bpp = BITS_PER_PIXEL[fmt]
+    bw.put(len(colours), 11)
+    if bpp <= 24:
+        bw.put_many(colours, bpp)
+    else:
+        for c in colours:
+            bw.put(int(c) >> 8, 24)
+            bw.put(int(c) & 0xff, bpp - 24)
+    counts = np.bincount(idx.reshape(-1), minlength=len(colours)).astype(np.float64)
+    freqs = np.maximum(1, np.round(counts / counts.max() * 255)).astype(int)
+    for v in freqs:
+        bw.put(int(v), 8)
+    codes = huffman_tree(list(freqs))
+    if len(codes) < len(colours):
+        raise ValueError("huffman tree misses a symbol")
+    bits = "".join(codes[int(i)] for i in idx.reshape(-1))
+    arr = np.frombuffer(bits.encode(), np.uint8) - 48
+    bw.put_many(arr, 1)
+
+
+def encode_level_nonzlib(bw, px, fmt, method=5):
     h, w = px.shape[:2]
     bw.put(fmt, 4)
     bw.put(w, 8)
     bw.put(h, 8)
-    bw.put(5, 4)
-    encode_lookup(bw, px, fmt)
+    bw.put(method, 4)
+    if method == 6:
+        encode_huffman_lookup(bw, px, fmt)
+    else:
+        encode_lookup(bw, px, fmt)
     bw.align()
 
 
 def encode_nonzlib(header, levels):
     """levels: list of (fmt, HxWx4 uint8). Returns bytes."""
-    bw = BitWriter()
-    bw.put(header & 0xbf, 8)
-    for fmt, px in levels:
-        encode_level_nonzlib(bw, px, fmt)
-    return bw.bytes()
+    best = None
+    for method in (5, 6):
+        bw = BitWriter()
+        bw.put(header & 0xbf, 8)
+        for fmt, px in levels:
+            m = method
+            if m == 6 and len(np.unique(rgba_to_native(px, fmt))) > 256:
+                m = 5                       # the game's Huffman scratch holds 8-bit indices only
+            try:
+                encode_level_nonzlib(bw, px, fmt, m)
+            except ValueError:
+                bw = None
+                break
+        if bw is None:
+            continue
+        data = bw.bytes()
+        if best is None or len(data) < len(best):
+            best = data
+    return best
 
 
 def rare_deflate(data):

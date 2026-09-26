@@ -108,7 +108,7 @@ def contact_sheets(thumbs, outdir, cell=64, cols=24, per=24 * 16):
             a = img[..., 3:4].astype(np.float32) / 255
             bg = checker(ih, iw).astype(np.float32)
             sheet[y0:y0 + ih, x0:x0 + iw] = (img[..., :3] * a + bg * (1 - a)).astype(np.uint8)
-            _label(sheet, x0 + 1, y0 + cell + 1, str(s + i))
+            _label(sheet, x0 + 1, y0 + cell + 1, name if name.isdigit() else str(s + i))
         png.write(os.path.join(outdir, "tex_%04d.png" % s), sheet)
     print("sheets ->", outdir)
 
