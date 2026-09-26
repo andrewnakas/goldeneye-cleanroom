@@ -53,6 +53,9 @@ published by `games/goldeneye/publish.sh`, which refuses to publish unless the t
 - Question for you: textures whose content is all alpha (legal-screen GOLDENEYE 007 logo, the two signatures,
   some icons) keep their exact silhouette through the kept 2-bit alpha outline (agreed scope, same as SM64).
   Say if you want those redrawn/re-typeset instead.
+- 04:50: headless Edge now renders without the GPU (nvidia-smi 0%) and runs the Nintendo logo at 4-6 fps for the
+  RETAIL ROM exactly as for ours, so scripted play can't reach a level; A/B shows identical behaviour. Live site
+  boots, file select + folders render. Fonts: thin glyphs (: ! . i) fixed and published.
 - Gameplay re-check of the latest builds is pending: this machine was at 60-70% CPU from other sessions and
   headless N64Wasm ran at 2-6 fps (retail ROM too). An earlier build with the same pipeline played Dam.
 - Level textures are colour grids + noise (default scope); some large signs/posters may still carry text not yet
