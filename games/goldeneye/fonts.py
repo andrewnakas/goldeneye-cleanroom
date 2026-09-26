@@ -53,6 +53,8 @@ def fit_glyph(c, w, h, th=None):
     if th is None:
         th = max(0.55, min(w, h) * 0.11, h * 0.085)
     th = min(th, max(0.5, (min(w, h) - 1) / 2.2))
+    if x1 == x0:
+        th = max(th, w / 2.0)          # thin glyphs (! : . i) fill their narrow cell
     pad = th * 0.9
     sx = (w - 2 * pad) / (x1 - x0) if x1 > x0 else 0.0
     sy = (h - 2 * pad) / (y1 - y0) if y1 > y0 else 0.0
