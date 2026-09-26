@@ -59,6 +59,10 @@ def main():
         args += ["--disable-gpu-vsync", "--disable-frame-rate-limit"]
     if not a.gpu:
         args += ["--enable-unsafe-swiftshader", "--use-angle=swiftshader", "--ignore-gpu-blocklist"]
+    else:
+        # hardware ANGLE on the discrete GPU (headless otherwise may fall back to software)
+        args += ["--use-angle=d3d11", "--ignore-gpu-blocklist", "--enable-gpu-rasterization",
+                 "--force_high_performance_gpu"]
     p = subprocess.Popen(args + ["about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         for _ in range(100):
