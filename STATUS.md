@@ -47,6 +47,14 @@ published by `games/goldeneye/publish.sh`, which refuses to publish unless the t
 - Voices: GE has only a handful of vocal sfx (6 found: grunts/screams); Piper placeholders in
   `overrides/sounds/sfx/`, practice pack at `D:/n64work/goldeneye/practice` (never published).
 
+- 06:00-07:10 rounds (published, taint 0 failing):
+  - Safety signs/placard/badge drawn from briefs (`picture_briefs.json` "signs": prohibition circles,
+    biohazard/flammable/skull triangles, the 275/6 placard, РОССИЯ badge); more labels (storage notice, plates, C5).
+  - Faces for main-character models too (Natalya, Trevelyan, Boris, Ourumov, Xenia, Jaws, Oddjob, ...).
+  - Mission-select and MP thumbnails rendered from each level's own geometry (`level_render.py`: bg rooms'
+    vertex tables + display lists, baked vertex light, top-down "recon photo"); Train/Cradle/Jungle/Streets keep
+    drawn scenes (thin or missing geometry). Verified on the live mission-select screen.
+
 ## Known issues / next
 - ~05:05: the D: drive disconnected for a few minutes and came back intact (was: (the 1.9 TB disk is no longer attached; only C: and E: remain). All work was
   pushed to GitHub first, and the live site is unaffected. The local work trees (pristine/dirty/clean decomp trees,
