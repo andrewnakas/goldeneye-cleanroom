@@ -60,7 +60,9 @@ published by `games/goldeneye/publish.sh`, which refuses to publish unless the t
 - 04:50: headless Edge now renders without the GPU (nvidia-smi 0%) and runs the Nintendo logo at 4-6 fps for the
   RETAIL ROM exactly as for ours, so scripted play can't reach a level; A/B shows identical behaviour. Live site
   boots, file select + folders render. Fonts: thin glyphs (: ! . i) fixed and published.
-- Gameplay re-check of the latest builds is pending: this machine was at 60-70% CPU from other sessions and
+- **05:20: verified the LIVE site plays Dam** (headless Edge with hardware ANGLE, 60 fps menus, in-level with guards).
+  shot.py `--gpu` now forces d3d11 ANGLE (headless had silently fallen back to software rendering).
+- (older) Gameplay re-check of the latest builds was pending: this machine was at 60-70% CPU from other sessions and
   headless N64Wasm ran at 2-6 fps (retail ROM too). An earlier build with the same pipeline played Dam.
 - Level textures are colour grids + noise (default scope); some large signs/posters may still carry text not yet
   transcribed (see find_text ranking beyond the first 120).
