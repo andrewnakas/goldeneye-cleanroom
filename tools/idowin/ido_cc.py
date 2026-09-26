@@ -31,7 +31,7 @@ def die(msg):
 def parse(argv):
     o = {"opt": "-O1", "isa": 1, "g": "0", "defs_incs": [], "fullwarn": False, "woff": [],
          "cpluscomm": False, "nostdinc": False, "r4300_mul": False, "out": None, "src": None,
-         "G": "0"}
+         "G": "0", "olimit": None}
     i = 0
     while i < len(argv):
         a = argv[i]
@@ -40,6 +40,9 @@ def parse(argv):
         elif a == "-G":
             i += 1
             o["G"] = argv[i]
+        elif a == "-Olimit":
+            i += 1
+            o["olimit"] = argv[i]
         elif a in ("-O0", "-O1", "-O2", "-O3"):
             o["opt"] = a
         elif a.startswith("-mips"):
@@ -82,6 +85,20 @@ def parse(argv):
 
 def main(argv):
     o = parse(argv[1:])
+    if os.path.basename(o["src"]) == "include-stdin.c":
+        # `... | cc tools/include-stdin.c` (#include "/dev/stdin"): compile the piped text instead
+        fd, piped = tempfile.mkstemp(suffix=".c", prefix=".stdin_", dir=os.path.dirname(o["src"]) or ".")
+        with os.fdopen(fd, "wb") as f:
+            f.write(sys.stdin.buffer.read())
+        o["src"] = piped
+        try:
+            return run(o, argv)
+        finally:
+            os.remove(piped)
+    return run(o, argv)
+
+
+def run(o, argv):
     bindir = os.environ.get("IDO_BIN") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "build", "idowin")
     exe = lambda n: os.path.join(bindir, n + ".exe")
     isa = o["isa"]
@@ -122,7 +139,7 @@ def main(argv):
 
     steps = [(cfe, ucode)]
     cur = ucode
-    olimit = ["-Olimit", "5000"] if opt == "-O3" else []
+    olimit = ["-Olimit", o["olimit"]] if o["olimit"] else (["-Olimit", "5000"] if opt == "-O3" else [])
     if opt == "-O3":
         # cc names the joined u-code after the source, relative to the cwd.
         u = os.path.splitext(os.path.basename(o["src"]))[0] + ".u"
