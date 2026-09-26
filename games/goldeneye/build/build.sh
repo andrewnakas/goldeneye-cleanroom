@@ -18,6 +18,10 @@ chmod +x "$IDOROOT/cc"
 export PATH="$HOME/bin:$HOME/.local/mips64/bin:$PATH"
 cd "$TREE"
 bash scripts/make/create_directories.sh build/u u >/dev/null 2>&1 || true
+# the Makefile has no header dependencies: image.c compiles images.def (texture sizes -> offsets)
+if [ build/u/src/game/image.o -ot assets/images.def ]; then rm -f build/u/src/game/image.o; fi
+# objects are .SECONDARY: a removed intermediate does not force a relink, so always relink
+rm -f build/u/ge007.u.elf build/u/ge007.u.bin build/u/ge007.u.z64
 make -j"$JOBS" IRIX_ROOT="$IDOROOT" COMPARE=0 \
   "ConvertAIPRINT=python $REPO/games/goldeneye/build/aiprint.py" build/u/ge007.u.z64
 ls -la build/u/ge007.u.z64

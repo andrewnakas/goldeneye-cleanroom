@@ -46,15 +46,16 @@ window.cleanroomKeys = function (spec) {
 
 INFO = """
 <div style="max-width:720px;margin:16px auto;font-size:14px;line-height:1.45;text-align:left">
-<p><b>Controls</b>: arrow keys = stick &middot; <b>D</b> = A &middot; <b>S</b> = B &middot; <b>A</b> = Z &middot;
-<b>Q</b>/<b>E</b> = L/R &middot; <b>Enter</b> = Start &middot; <b>I J K L</b> = C buttons &middot; gamepads work too
-(remap under the <code>`</code> menu).</p>
-<p>Built from the <a href="https://github.com/VetriTheRetri/ssb-decomp-re">ssb-decomp-re</a> decompilation.
-Every texture, sprite, palette, particle image and instrument/sound sample was regenerated from coarse facts
-(size, format, a colour grid, a 2-bit alpha outline; sample length, loops and a spectral outline) &mdash; no
-original pixels or samples are included. Music note data and game code come from the decomp.
-Voices are placeholders. Runs on <a href="https://github.com/nbarkhina/N64Wasm">N64Wasm</a> (MIT).
-Source: <a href="https://github.com/andrewnakas/ssb64-cleanroom">andrewnakas/ssb64-cleanroom</a>.</p>
+<p><b>Controls</b>: arrow keys = stick (move/turn) &middot; <b>A</b> = Z (fire) &middot; <b>D</b> = A (use / change weapon) &middot;
+<b>S</b> = B &middot; <b>Q</b>/<b>E</b> = L/R (aim) &middot; <b>Enter</b> = Start &middot; <b>I J K L</b> = C buttons (look / strafe) &middot;
+gamepads work too (remap under the <code>`</code> menu).</p>
+<p>GoldenEye 007 built from the <a href="https://github.com/n64decomp/007">n64decomp/007</a> decompilation.
+Every texture (2,698 image-bank textures), font glyph, logo surface, the gun-barrel picture and every
+instrument/sound-effect sample was regenerated from coarse facts (size, format, a colour grid, a 2-bit alpha
+outline; sample length, loops and a spectral outline) &mdash; no original pixels or samples are included.
+Music note data, level geometry, text and game code come from the decomp. Runs on
+<a href="https://github.com/nbarkhina/N64Wasm">N64Wasm</a> (MIT).
+Source: <a href="https://github.com/andrewnakas/goldeneye-cleanroom">andrewnakas/goldeneye-cleanroom</a>.</p>
 </div>
 """
 
@@ -83,8 +84,8 @@ def main():
     open(os.path.join(a.out, "romlist.js"), "w").write("var ROMLIST = [];\nwindow.SITE_ROM = 'game.z64';\n")
     idx = a.index if os.path.exists(a.index) else os.path.join(a.n64wasm, "index.html")
     html = open(idx, encoding="utf-8").read()
-    html = html.replace("<title>N64 Wasm</title>", "<title>Super Smash Bros. clean room</title>")
-    html = re.sub(r"<h1>\s*N64 Wasm", '<h1>Super Smash Bros. <small style="font-size:50%">clean room</small>', html, 1)
+    html = html.replace("<title>N64 Wasm</title>", "<title>GoldenEye 007 clean room</title>")
+    html = re.sub(r"<h1>\s*N64 Wasm", '<h1>GoldenEye 007 <small style="font-size:50%">clean room</small>', html, 1)
     html = html.replace('<div id="bottomPanel"', INFO + '<div id="bottomPanel"', 1)
     open(os.path.join(a.out, "index.html"), "w", encoding="utf-8").write(html)
     open(os.path.join(a.out, ".nojekyll"), "w").write("")

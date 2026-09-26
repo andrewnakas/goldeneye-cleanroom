@@ -134,6 +134,11 @@ def encode_texture(t, img0):
         kmax = 16 if fmt in (10, 12) else 256
         k = max(2, min(t["palette"], kmax))
         pal, idx0 = quantize(img0, k, h32("pal", t["name"]))
+        # our own palette order (a sorted grey ramp would equal any other sorted ramp byte for byte)
+        perm = np.random.default_rng(h32("order", t["name"])).permutation(len(pal))
+        inv = np.empty_like(perm)
+        inv[perm] = np.arange(len(perm))
+        pal, idx0 = pal[perm], inv[idx0]
         pal_u16 = pal16(pal, fmt in (11, 12))
         idxs = [idx0]
         for im in imgs[1:]:
@@ -205,8 +210,22 @@ def main(argv):
             only = {int(x) for x in argv[argv.index("--only") + 1].split(",")}
         textures(argv[1], only)
     elif cmd == "all":
-        setup(*argv[1:4])
-        textures(argv[3])
+        pristine, dirty, clean = argv[1:4]
+        setup(pristine, dirty, clean)
+        textures(clean)
+        pictures(clean)
+        from games.goldeneye import audio, fonts, srcpics
+        audio.build(dirty, clean)
+        fonts.main([pristine, clean])
+        srcpics.build(pristine, clean)
+    elif cmd == "pictures":
+        pictures(argv[1])
+
+
+def pictures(clean):
+    from games.goldeneye import drawn
+    open(os.path.join(clean, "assets/ge007.u.2A4D50.usedby7F008DE4.bin"), "wb").write(drawn.rle8(drawn.gunbarrel()))
+    print("pictures: gun barrel")
 
 
 if __name__ == "__main__":

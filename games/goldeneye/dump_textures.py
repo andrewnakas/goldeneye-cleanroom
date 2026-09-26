@@ -11,8 +11,11 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 def main():
-    dirty, exe, out = sys.argv[1:4]
-    names = [l.split(",")[2] for l in open(os.path.join(dirty, "build/u/imagelist.csv")) if l.strip()]
+    dump(sys.argv[1], sys.argv[1], sys.argv[2], sys.argv[3])
+
+
+def dump(names_tree, dirty, exe, out):
+    names = [l.split(",")[2] for l in open(os.path.join(names_tree, "build/u/imagelist.csv")) if l.strip()]
     tmp = tempfile.mkdtemp(prefix="tex2raw_")
 
     def one(k):

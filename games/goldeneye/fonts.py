@@ -64,7 +64,7 @@ def fit_glyph(c, w, h, th=None):
 def parse_u32_arrays(src):
     """{name: [u32...]} for every `u32 name[] = {...};` in a C file."""
     out = {}
-    for m in re.finditer(r"u32\s+(\w+)\s*\[\s*\d*\s*\]\s*=\s*\{(.*?)\};", src, re.S):
+    for m in re.finditer(r"u32\s+(\w+)\s*\[[^\]]*\]\s*=\s*\{(.*?)\};", src, re.S):
         body = re.sub(r"//.*|/\*.*?\*/", "", m.group(2), flags=re.S)
         out[m.group(1)] = [int(v, 0) for v in re.findall(r"0x[0-9A-Fa-f]+|\d+", body)]
     return out
@@ -75,7 +75,9 @@ def regenerate_font(path_in, path_out, prefix):
     arr = parse_u32_arrays(src)
     table = arr[prefix + "_fontchartable"]
     nbytes = len(arr[prefix + "_fontbytes"]) * 4
-    base = min(table[k * 6 + 5] for k in range(len(table) // 6))     # struct offset of fontbytes
+    # struct offset of fontbytes: the arrays before it (kerning, char table) are packed, no padding
+    names = list(arr)
+    base = 4 * sum(len(arr[n]) for n in names[:names.index(prefix + "_fontbytes")])
     data = bytearray(nbytes)
     cells = []
     for k in range(len(table) // 6):
